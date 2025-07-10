@@ -10,13 +10,6 @@ const router = express.Router();
 // TODO: Implement get all therapies (EASY TASK)
 router.get('/', async (req, res) => {
   try {
-    // TODO: Implement logic to fetch all therapies
-    // 1. Use Therapy.find() to get all therapies
-    // 2. Populate the createdBy field to show creator name and email
-    // 3. Return the therapies
-    //
-    // HINT: const therapies = await Therapy.find().populate('createdBy', 'name email');
-    //       res.json(therapies);
 
     res.status(501).json({ message: 'Get therapies endpoint not implemented yet' });
   } catch (error) {
@@ -31,15 +24,6 @@ router.get('/', async (req, res) => {
 // TODO: Implement get therapy by ID (EASY TASK)
 router.get('/:id', async (req, res) => {
   try {
-    // TODO: Implement logic to fetch therapy by ID
-    // 1. Use Therapy.findById() to get therapy
-    // 2. Populate the createdBy field
-    // 3. Return 404 if therapy not found
-    // 4. Handle invalid ObjectId format
-    //
-    // HINT: const therapy = await Therapy.findById(req.params.id).populate('createdBy', 'name email');
-    //       if (!therapy) return res.status(404).json({ message: 'Therapy not found' });
-    //       res.json(therapy);
 
     res.status(501).json({ message: 'Get therapy by ID endpoint not implemented yet' });
   } catch (error) {
