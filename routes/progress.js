@@ -54,46 +54,36 @@ router.get('/user/:userId', auth, async (req, res) => {
       return res.status(403).json({ message: 'Access denied' });
     }
 
-    // TODO: Implement advanced progress statistics using MongoDB aggregation
-    // This should calculate:
-    // 1. Total steps completed by the user
-    // 2. Progress percentage for each therapy
-    // 3. Progress percentage for each module
-    // 4. Overall completion statistics
-    // 5. Recent activity (last 7 days)
-    // 
-    // Use MongoDB aggregation pipeline with $lookup, $group, and $project stages
-    // Consider using $facet for multiple aggregations in one query
+    // TODO: Implement progress statistics using MongoDB aggregation
+    // Expected response format:
+    // {
+    //   "totalStepsCompleted": 2,
+    //   "therapyProgress": [
+    //     {
+    //       "therapyId": "...",
+    //       "therapyTitle": "Anxiety Management",
+    //       "completedSteps": 2,
+    //       "totalSteps": 2,
+    //       "progressPercentage": 100
+    //     }
+    //   ],
+    //   "recentActivity": [
+    //     {
+    //       "stepTitle": "Step 1",
+    //       "therapyTitle": "Anxiety Management",
+    //       "completedAt": "2024-01-15T10:30:00Z"
+    //     }
+    //   ]
+    // }
+    //
+    // HINT: Use aggregation pipeline with $lookup to join collections
+    // 1. Start with UserProgress.aggregate([...])
+    // 2. $match to filter by user
+    // 3. $lookup to join with Step, Module, and Therapy collections
+    // 4. $group to calculate statistics
+    // 5. $project to format the output
 
     res.status(501).json({ message: 'User progress statistics endpoint not implemented yet' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// @route   GET /api/progress/therapy/:therapyId
-// @desc    Get therapy completion statistics
-// @access  Private (therapist only)
-// TODO: Implement therapy statistics (HARD TASK - OPTIONAL)
-router.get('/therapy/:therapyId', auth, async (req, res) => {
-  try {
-    // Only therapists can view therapy statistics
-    if (req.user.role !== 'therapist') {
-      return res.status(403).json({ message: 'Only therapists can view therapy statistics' });
-    }
-
-    const { therapyId } = req.params;
-
-    // TODO: Implement therapy completion statistics using MongoDB aggregation
-    // This should calculate:
-    // 1. Number of users who started this therapy
-    // 2. Number of users who completed this therapy
-    // 3. Average completion rate
-    // 4. Most/least completed modules
-    // 5. Average time to completion
-
-    res.status(501).json({ message: 'Therapy statistics endpoint not implemented yet' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

@@ -2,10 +2,9 @@ const request = require('supertest');
 const app = require('../server');
 const User = require('../models/User');
 const Therapy = require('../models/Therapy');
-const Module = require('../models/Module');
 
 describe('Easy Task - Basic CRUD Operations', () => {
-  let therapist, therapy, modules;
+  let therapist, therapy;
 
   beforeEach(async () => {
     // Create test data
@@ -23,23 +22,6 @@ describe('Easy Task - Basic CRUD Operations', () => {
       duration: 6,
       createdBy: therapist._id
     });
-
-    modules = await Module.create([
-      {
-        title: 'Module 1',
-        description: 'First module',
-        therapy: therapy._id,
-        orderIndex: 0,
-        type: 'lesson'
-      },
-      {
-        title: 'Module 2',
-        description: 'Second module',
-        therapy: therapy._id,
-        orderIndex: 1,
-        type: 'exercise'
-      }
-    ]);
   });
 
   describe('GET /api/therapies', () => {
@@ -108,48 +90,6 @@ describe('Easy Task - Basic CRUD Operations', () => {
         .expect(400);
 
       expect(response.body.message).toBe('Invalid therapy ID');
-    });
-  });
-
-  describe('GET /api/therapies/:id/modules', () => {
-    test('should return modules for a therapy sorted by orderIndex', async () => {
-      const response = await request(app)
-        .get(`/api/therapies/${therapy._id}/modules`)
-        .expect(200);
-
-      expect(response.body).toHaveLength(2);
-      expect(response.body[0]).toMatchObject({
-        title: 'Module 1',
-        description: 'First module',
-        orderIndex: 0,
-        type: 'lesson'
-      });
-      expect(response.body[1]).toMatchObject({
-        title: 'Module 2',
-        description: 'Second module',
-        orderIndex: 1,
-        type: 'exercise'
-      });
-    });
-
-    test('should return 404 for non-existent therapy', async () => {
-      const fakeId = '507f1f77bcf86cd799439011';
-      
-      const response = await request(app)
-        .get(`/api/therapies/${fakeId}/modules`)
-        .expect(404);
-
-      expect(response.body.message).toBe('Therapy not found');
-    });
-
-    test('should return empty array for therapy with no modules', async () => {
-      await Module.deleteMany({});
-      
-      const response = await request(app)
-        .get(`/api/therapies/${therapy._id}/modules`)
-        .expect(200);
-
-      expect(response.body).toHaveLength(0);
     });
   });
 }); 

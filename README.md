@@ -1,165 +1,139 @@
-# Rauha Interview Project
+# Rauha Interview Project - Simplified Version
 
 ## Overview
 
 Rauha is a prescription digital therapeutic designed to reduce depression and anxiety through cognitive behavioral therapy (CBT). This is a **technical interview project** that tests your knowledge of Node.js, Express, MongoDB, and JWT authentication.
 
-## 🎯 Your Mission
+## 🎯 Your Mission - 45 Minutes
 
-You will be implementing **three tasks** of increasing difficulty. Each task has corresponding tests that will pass when you complete the implementation correctly.
+You will be implementing **two main tasks** plus an optional advanced task. The entire interview should take **under 45 minutes**.
 
 ### 📊 Task Structure
 
-- **🟢 Easy Task**: Basic MongoDB CRUD operations
-- **🟡 Medium Task**: JWT Authentication & Authorization  
-- **🔴 Hard Task (Optional)**: Advanced MongoDB Aggregation
+- **🟢 Easy Task (15 minutes)**: Basic MongoDB CRUD operations - 2 endpoints
+- **🟡 Medium Task (15 minutes)**: JWT Authentication - 1 endpoint  
+- **🔴 Hard Task (15 minutes - Optional)**: MongoDB Aggregation - 1 endpoint
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
-- Node.js (v16 or higher)
-- MongoDB (local installation or MongoDB Atlas)
-- Git
+### Quick Setup (5 minutes)
 
-### Setup Instructions
-
-1. **Clone and Install**
+1. **Install Dependencies**
    ```bash
-   git clone <repository-url>
-   cd rauha-interview-project
    npm install
    ```
 
 2. **Environment Setup**
    ```bash
    cp env.example .env
-   # Edit .env file with your MongoDB connection string
+   # MongoDB connection string is already configured for local MongoDB
    ```
 
 3. **Database Setup**
    ```bash
-   # Seed the database with sample data
    npm run seed
    ```
 
-4. **Run the Application**
+4. **Run Tests**
    ```bash
-   # Development mode
-   npm run dev
-   
-   # Production mode
-   npm start
-   ```
-
-5. **Run Tests**
-   ```bash
-   # Run all tests
    npm test
-   
-   # Run tests in watch mode
-   npm run test:watch
    ```
 
 ---
 
 ## 📋 Tasks to Complete
 
-### 🟢 **Easy Task: Basic CRUD Operations**
+### 🟢 **Easy Task: Basic CRUD Operations (15 minutes)**
 
 **File to modify**: `routes/therapies.js`
 
 **What to implement**:
 - `GET /api/therapies` - Return all therapies with populated creator info
 - `GET /api/therapies/:id` - Return specific therapy by ID
-- `GET /api/therapies/:id/modules` - Return modules for a therapy, sorted by orderIndex
 
 **Skills tested**:
 - MongoDB queries with Mongoose
 - Population of referenced documents
-- Error handling for invalid IDs
-- Basic Express route handling
+- Basic error handling
 
 **Tests to pass**: `npm test -- tests/easy.test.js`
 
-**Hints**:
-- Use `Therapy.find()` and `.populate('createdBy', 'name email')`
-- Handle invalid ObjectIds with try/catch
-- Sort modules using `.sort({ orderIndex: 1 })`
-- Return appropriate HTTP status codes
+**Starter code provided**:
+```javascript
+// GET /api/therapies
+const therapies = await Therapy.find().populate('createdBy', 'name email');
+res.json(therapies);
 
-### 🟡 **Medium Task: Authentication & Authorization**
+// GET /api/therapies/:id  
+const therapy = await Therapy.findById(req.params.id).populate('createdBy', 'name email');
+if (!therapy) return res.status(404).json({ message: 'Therapy not found' });
+res.json(therapy);
+```
+
+### 🟡 **Medium Task: Authentication (15 minutes)**
 
 **File to modify**: `routes/auth.js`
 
 **What to implement**:
-- `POST /api/auth/register` - Register new users
-- `POST /api/auth/login` - Login existing users
-- JWT token generation and validation
+- `POST /api/auth/login` - Login existing users and return JWT token
 
 **Skills tested**:
-- Password hashing with bcrypt
-- JWT token creation and verification
-- Input validation
-- Authentication middleware
-- Error handling
+- Password comparison with bcrypt
+- JWT token creation
+- Basic validation
 
 **Tests to pass**: `npm test -- tests/medium.test.js`
 
-**Hints**:
-- Check if user exists before registration
-- Use `user.comparePassword()` for login
-- Generate JWT with `jwt.sign({ userId: user._id }, process.env.JWT_SECRET)`
-- Return user data without password
-- Handle validation errors properly
+**Starter code provided**:
+```javascript
+// POST /api/auth/login
+const { email, password } = req.body;
+const user = await User.findOne({ email });
+if (!user || !(await user.comparePassword(password))) {
+  return res.status(401).json({ message: 'Invalid credentials' });
+}
 
-### 🔴 **Hard Task: Advanced Aggregation (Optional)**
+const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+res.json({ token, user: { name: user.name, email: user.email, role: user.role } });
+```
+
+### 🔴 **Hard Task: Aggregation (15 minutes - Optional)**
 
 **File to modify**: `routes/progress.js`
 
 **What to implement**:
-- `GET /api/progress/user/:userId` - Complex user progress statistics
-- `GET /api/progress/therapy/:therapyId` - Therapy completion analytics
+- `GET /api/progress/user/:userId` - User progress statistics using MongoDB aggregation
 
 **Skills tested**:
-- MongoDB aggregation pipelines
+- MongoDB aggregation pipeline
 - Complex data relationships
-- Performance optimization
-- Advanced authorization logic
 
 **Tests to pass**: `npm test -- tests/hard.test.js`
 
 **Expected Response Format**:
-
 ```javascript
-// GET /api/progress/user/:userId
 {
-  "totalStepsCompleted": 5,
+  "totalStepsCompleted": 3,
   "therapyProgress": [
     {
       "therapyId": "...",
-      "therapyTitle": "Anxiety Management",
-      "completedSteps": 3,
-      "totalSteps": 5,
-      "progressPercentage": 60,
-      "modules": [...]
+      "therapyTitle": "Anxiety Management", 
+      "completedSteps": 2,
+      "totalSteps": 4,
+      "progressPercentage": 50
     }
   ],
-  "recentActivity": [...], // Last 7 days
-  "overallStats": {
-    "totalTherapiesStarted": 2,
-    "totalTherapiesCompleted": 1,
-    "averageCompletionRate": 75
-  }
+  "recentActivity": [
+    {
+      "stepTitle": "Introduction",
+      "therapyTitle": "Anxiety Management",
+      "completedAt": "2024-01-15T10:30:00Z"
+    }
+  ]
 }
 ```
-
-**Hints**:
-- Use aggregation pipeline with `$lookup`, `$group`, `$project`
-- Consider using `$facet` for multiple aggregations
-- Filter recent activity with date comparisons
-- Calculate percentages using `$divide` and `$multiply`
 
 ---
 
@@ -170,28 +144,20 @@ You will be implementing **three tasks** of increasing difficulty. Each task has
 # Run all tests
 npm test
 
-# Run specific test file
+# Run specific test file  
 npm test -- tests/easy.test.js
 npm test -- tests/medium.test.js
 npm test -- tests/hard.test.js
-
-# Watch mode for development
-npm run test:watch
 ```
 
-### Test Structure
-- **Easy tests**: Focus on basic functionality and error handling
-- **Medium tests**: Comprehensive authentication flow testing
-- **Hard tests**: Complex data scenarios and edge cases
-
-### Debugging Tests
-- Tests use in-memory MongoDB for isolation
-- Each test suite has detailed setup and teardown
-- Check test output for specific failure reasons
+### Test Expectations
+- **Easy tests**: 5 test cases (basic CRUD + error handling)
+- **Medium tests**: 4 test cases (login flow + validation)
+- **Hard tests**: 3 test cases (aggregation + authorization)
 
 ---
 
-## 📚 Data Models
+## 📚 Key Data Models
 
 ### User
 ```javascript
@@ -209,30 +175,8 @@ npm run test:watch
   title: String,
   description: String,
   category: 'anxiety' | 'depression' | 'general',
-  duration: Number, // weeks
+  duration: Number,
   createdBy: ObjectId // User reference
-}
-```
-
-### Module
-```javascript
-{
-  title: String,
-  description: String,
-  therapy: ObjectId, // Therapy reference
-  orderIndex: Number,
-  type: 'lesson' | 'exercise' | 'assessment'
-}
-```
-
-### Step
-```javascript
-{
-  title: String,
-  content: String,
-  module: ObjectId, // Module reference
-  orderIndex: Number,
-  type: 'video' | 'reading' | 'exercise' | 'quiz'
 }
 ```
 
@@ -240,34 +184,27 @@ npm run test:watch
 ```javascript
 {
   user: ObjectId, // User reference
-  step: ObjectId, // Step reference
-  status: 'not-started' | 'completed',
+  step: ObjectId, // Step reference  
+  status: 'completed',
   completedAt: Date
 }
 ```
 
 ---
 
-## 🔧 API Endpoints
+## 🔧 Available API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/me` - Get current user (protected)
+- `POST /api/auth/login` - Login user (**TO IMPLEMENT**)
+- `GET /api/auth/me` - Get current user (already implemented)
 
-### Therapies
-- `GET /api/therapies` - Get all therapies
-- `GET /api/therapies/:id` - Get therapy by ID
-- `GET /api/therapies/:id/modules` - Get therapy modules
-- `POST /api/therapies` - Create therapy (therapist only)
+### Therapies  
+- `GET /api/therapies` - Get all therapies (**TO IMPLEMENT**)
+- `GET /api/therapies/:id` - Get therapy by ID (**TO IMPLEMENT**)
 
 ### Progress
-- `POST /api/progress/complete` - Mark step as completed (protected)
-- `GET /api/progress/user/:userId` - User progress stats (protected)
-- `GET /api/progress/therapy/:therapyId` - Therapy stats (therapist only)
-
-### Utility
-- `GET /health` - Health check
+- `POST /api/progress/complete` - Mark step as completed (already implemented)
+- `GET /api/progress/user/:userId` - User progress stats (**OPTIONAL TO IMPLEMENT**)
 
 ---
 
@@ -275,71 +212,35 @@ npm run test:watch
 
 The database is seeded with:
 - **Therapist**: `therapist@rauha.com` / `password123`
-- **Patient 1**: `john@example.com` / `password123`
-- **Patient 2**: `jane@example.com` / `password123`
+- **Patient**: `john@example.com` / `password123`  
 - **2 Therapies**: Anxiety Management, Depression Recovery
-- **5 Modules**: Various lesson types
-- **8 Steps**: Reading, exercises, quizzes
 - **Sample Progress**: Completed steps for testing
-
----
-
-## 🎖️ Evaluation Criteria
-
-### Code Quality
-- ✅ Clean, readable code structure
-- ✅ Proper error handling
-- ✅ Appropriate HTTP status codes
-- ✅ Input validation
-
-### MongoDB Knowledge
-- ✅ Efficient queries and indexes
-- ✅ Proper use of population
-- ✅ Aggregation pipeline usage (Hard task)
-- ✅ Data modeling understanding
-
-### Security
-- ✅ Password hashing
-- ✅ JWT implementation
-- ✅ Authorization checks
-- ✅ Input sanitization
-
-### Testing
-- ✅ All tests pass
-- ✅ Edge cases handled
-- ✅ Proper test data setup
 
 ---
 
 ## 💡 Tips for Success
 
-1. **Start with Easy**: Get the basic CRUD operations working first
-2. **Read the Tests**: Tests show exactly what's expected
-3. **Use Postman**: Test your endpoints manually during development
-4. **Check Sample Data**: Understand the data relationships
-5. **Handle Errors**: Always return appropriate error messages
-6. **Security First**: Never expose passwords in responses
-7. **Performance**: Use efficient MongoDB queries
+1. **Start with Easy Task**: Get basic CRUD working first (15 min)
+2. **Use the starter code**: Copy-paste and modify the provided code snippets
+3. **Focus on core functionality**: Don't over-engineer
+4. **Test as you go**: Run tests after each endpoint
+5. **Skip Hard Task if needed**: It's optional and worth fewer points
 
 ---
 
-## 🆘 Getting Help
+## 🎯 Time Management
 
-If you're stuck:
-1. Check the test files for expected behavior
-2. Review the sample data structure
-3. Use `console.log()` for debugging
-4. Check MongoDB queries in MongoDB Compass
-5. Verify your JWT tokens at jwt.io
+- **Minutes 0-5**: Setup and understand the codebase
+- **Minutes 5-20**: Complete Easy Task (2 endpoints)
+- **Minutes 20-35**: Complete Medium Task (1 endpoint)  
+- **Minutes 35-45**: Attempt Hard Task (optional)
 
 ---
 
-## 🏁 Submission
+## 🏁 Success Criteria
 
-When you're ready to submit:
-1. Ensure all tests pass: `npm test`
-2. Test the API manually with sample data
-3. Commit your changes with clear messages
-4. Be prepared to explain your implementation choices
+**Minimum to pass**: Easy + Medium tasks completed
+**Bonus points**: Hard task completed
+**Extra credit**: Clean code with proper error handling
 
 **Good luck! 🚀**

@@ -1,6 +1,5 @@
 const express = require('express');
 const Therapy = require('../models/Therapy');
-const Module = require('../models/Module');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
@@ -13,8 +12,11 @@ router.get('/', async (req, res) => {
   try {
     // TODO: Implement logic to fetch all therapies
     // 1. Use Therapy.find() to get all therapies
-    // 2. Populate the createdBy field to show creator name
+    // 2. Populate the createdBy field to show creator name and email
     // 3. Return the therapies
+    //
+    // HINT: const therapies = await Therapy.find().populate('createdBy', 'name email');
+    //       res.json(therapies);
 
     res.status(501).json({ message: 'Get therapies endpoint not implemented yet' });
   } catch (error) {
@@ -33,30 +35,19 @@ router.get('/:id', async (req, res) => {
     // 1. Use Therapy.findById() to get therapy
     // 2. Populate the createdBy field
     // 3. Return 404 if therapy not found
-    // 4. Return the therapy
+    // 4. Handle invalid ObjectId format
+    //
+    // HINT: const therapy = await Therapy.findById(req.params.id).populate('createdBy', 'name email');
+    //       if (!therapy) return res.status(404).json({ message: 'Therapy not found' });
+    //       res.json(therapy);
 
     res.status(501).json({ message: 'Get therapy by ID endpoint not implemented yet' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// @route   GET /api/therapies/:id/modules
-// @desc    Get modules for a therapy
-// @access  Public
-// TODO: Implement get modules for therapy (EASY TASK)
-router.get('/:id/modules', async (req, res) => {
-  try {
-    // TODO: Implement logic to fetch modules for a therapy
-    // 1. First check if therapy exists
-    // 2. Use Module.find() to get modules for the therapy
-    // 3. Sort modules by orderIndex
-    // 4. Return the modules
-
-    res.status(501).json({ message: 'Get therapy modules endpoint not implemented yet' });
-  } catch (error) {
-    console.error(error);
+    // Handle invalid ObjectId format
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid therapy ID' });
+    }
     res.status(500).json({ message: 'Server error' });
   }
 });
