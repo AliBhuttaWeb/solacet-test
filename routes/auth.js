@@ -20,23 +20,15 @@ router.post('/login', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    // TODO: Implement user login logic
-    // 1. Find user by email
-    // 2. Compare password using user.comparePassword()
-    // 3. Generate JWT token
-    // 4. Return user data and token (exclude password)
-    //
-    // HINT: const { email, password } = req.body;
-    //       const user = await User.findOne({ email });
-    //       if (!user || !(await user.comparePassword(password))) {
-    //         return res.status(401).json({ message: 'Invalid credentials' });
-    //       }
-    //       const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    //       res.json({ token, user: { name: user.name, email: user.email, role: user.role } });
+    const { email, password } = req.body
+    const user = await User.findOne({ email })
+    if(!user) return res.status(401).json({message: 'Invalid credentials'})
+    const passwordVerified = await user.comparePassword(password)
+    if(!passwordVerified) return res.status(401).json({message: 'Invalid credentials'})
 
-    res.status(501).json({ message: 'Login endpoint not implemented yet' });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '24h' })
+    res.status(200).json({ token, user });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 });
