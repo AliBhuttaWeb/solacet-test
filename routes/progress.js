@@ -4,6 +4,7 @@ const Step = require('../models/Step');
 const Module = require('../models/Module');
 const Therapy = require('../models/Therapy');
 const auth = require('../middleware/auth');
+const { default: mongoose } = require('mongoose');
 
 const router = express.Router();
 
@@ -54,6 +55,104 @@ router.get('/user/:userId', auth, async (req, res) => {
       return res.status(403).json({ message: 'Access denied' });
     }
 
+    const progress = await UserProgress.aggregate([
+      {
+        $match: { user: new mongoose.Types.ObjectId(userId) }
+      },
+      {
+        $lookup: {
+          from: "steps",
+          localField: "step",
+          foreignField: "_id",
+          as: "step"
+        }
+      },
+      { $unwind: "$step" },
+      {
+        $lookup: {
+          from: "modules",
+          localField: "step.module",
+          foreignField: "_id",
+          as: "module"
+        }
+      },
+      { $unwind: "$module" },
+      {
+        $lookup: {
+          from: "therapies",
+          localField: "module.therapy",
+          foreignField: "_id",
+          as: "therapy"
+        }
+      },
+      { $unwind: "$therapy" },
+    
+      // Group by therapy
+      {
+        $group: {
+          _id: "$therapy._id",
+          therapyTitle: { $first: "$therapy.title" },
+          completedSteps: {
+            $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] }
+          },
+          totalSteps: { $addToSet: "$step._id" },
+          recentSteps: {
+            $push: {
+              stepTitle: "$step.title",
+              therapyTitle: "$therapy.title",
+              completedAt: "$completedAt"
+            }
+          }
+        }
+      },
+    
+      // Add progress percentage and fix totalSteps count
+      {
+        $project: {
+          therapyId: "$_id",
+          therapyTitle: 1,
+          completedSteps: 1,
+          totalSteps: { $size: "$totalSteps" },
+          progressPercentage: {
+            $cond: [
+              { $eq: [{ $size: "$totalSteps" }, 0] },
+              0,
+              {
+                $round: [
+                  { $multiply: [{ $divide: ["$completedSteps", { $size: "$totalSteps" }] }, 100] },
+                  0
+                ]
+              }
+            ]
+          },
+          recentSteps: 1
+        }
+      }
+    ]);
+    
+    // Building final response:
+    const totalStepsCompleted = progress.reduce((sum, p) => sum + p.completedSteps, 0);
+    
+    const therapyProgress = progress.map(p => ({
+      therapyId: p.therapyId,
+      therapyTitle: p.therapyTitle,
+      completedSteps: p.completedSteps,
+      totalSteps: p.totalSteps,
+      progressPercentage: p.progressPercentage
+    }));
+    
+    // Flatten all recent activities across therapies
+    const recentActivity = progress.flatMap(p => p.recentSteps)
+      .filter(r => r.completedAt) // Optional: only include completed steps
+      .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+      .slice(0, 5); // Optional: limit recent items
+    
+    const response = {
+      totalStepsCompleted,
+      therapyProgress,
+      recentActivity
+    };
+
     // TODO: Implement progress statistics using MongoDB aggregation
     // Expected response format:
     // {
@@ -83,7 +182,7 @@ router.get('/user/:userId', auth, async (req, res) => {
     // 4. $group to calculate statistics
     // 5. $project to format the output
 
-    res.status(501).json({ message: 'User progress statistics endpoint not implemented yet' });
+    res.status(200).json(response);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
